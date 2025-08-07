@@ -1,0 +1,187 @@
+{
+  "name": "Gmail automation Labelling",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 7
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        -40
+      ],
+      "id": "651abe5b-ffce-4e9c-8bb8-83b7d7bd03ed",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uW9zEh5NnAVUR0G2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Job",
+              "description": "Email that classifies text related to employment opportunities, job applications, hiring announcements, company recruitment, or professional roles."
+            },
+            {
+              "category": "Learning",
+              "description": "Email that Identifies content focused on education, online courses, tutorials, certifications, training programs, or self-development through structured knowledge."
+            }
+          ]
+        },
+        "options": {
+          "fallback": "discard"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        140,
+        -40
+      ],
+      "id": "537df490-4efd-442d-84b0-2656d655edb8",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmOllama",
+      "typeVersion": 1,
+      "position": [
+        100,
+        140
+      ],
+      "id": "08dec420-7f1d-483a-b04d-42f5e1e8ac00",
+      "name": "Ollama Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "7bUWkk7BoYq8NdJq",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_7829554027544049221"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        -140
+      ],
+      "id": "944c1030-09b7-4a6c-8ca1-230e4a150f16",
+      "name": "Gmail",
+      "webhookId": "f60ea3dd-ef77-44dd-a6af-54bdc01cb525",
+      "notesInFlow": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uW9zEh5NnAVUR0G2",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "labelled the new email as Job"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_3113920450663899215"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        60
+      ],
+      "id": "04ff7e48-b71a-443c-a1b8-524d53c24e33",
+      "name": "Gmail1",
+      "webhookId": "f60ea3dd-ef77-44dd-a6af-54bdc01cb525",
+      "notesInFlow": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uW9zEh5NnAVUR0G2",
+          "name": "Gmail account"
+        }
+      },
+      "notes": "labelled the new email as Learning"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a492f064-2c75-4347-8351-d6b2e1eb9372",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d53cbb442b89d99c8c6a0e0d8ff586de3f8e46a7231c8cfad378540a168c9471"
+  },
+  "id": "dmtH0hqVx0YaxMrO",
+  "tags": []
+}

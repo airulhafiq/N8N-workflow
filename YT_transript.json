@@ -1,0 +1,891 @@
+{
+  "name": "YT transript",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -320
+      ],
+      "id": "b82e7623-77a0-4b0f-b58d-b649f53e90ca",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {},
+      "type": "youtubeTranscriptNode",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -320
+      ],
+      "id": "5a226c11-2cf5-4814-97b4-5cfa589833a0",
+      "name": "Youtube Transcript"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        200,
+        -360
+      ],
+      "id": "38bfe09e-e120-442b-bd09-8d451a57f759",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        140,
+        -220
+      ],
+      "id": "6189b3d3-5df4-4d26-8dcd-f314b4ca7522",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24e9b1c3-2955-4e0b-9b4b-a6b9d046fb72",
+              "name": "google_api_key",
+              "type": "string",
+              "value": "={{ $env.GOOGLE_API_KEY }}"
+            },
+            {
+              "id": "b6600a42-1b8d-486a-a51d-0868bc45452e",
+              "name": "youtube_url",
+              "type": "string",
+              "value": "=https://www.youtube.com/watch?v={{ $json[\"YouTube Video Id\"] }}"
+            },
+            {
+              "id": "ce9a9a40-5ae4-4106-ae61-0daba2ec185f",
+              "name": "prompt_type",
+              "type": "string",
+              "value": "={{ $json[\"Prompt Type\"] }}"
+            },
+            {
+              "id": "47094d96-2e89-4294-b6da-7ee66917bd98",
+              "name": "video_id",
+              "type": "string",
+              "value": "={{ $json[\"YouTube Video Id\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1f4f372a-afb2-4518-b2bd-47c1b3e7c9bb",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -200,
+        1180
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "### Prompt Options\n\n- **default**: Summarizes the video with emphasis on actionable insights, tools, strategies, and resources mentioned.\n\n- **transcribe**: Provides verbatim transcription of all spoken dialogue in the video without additional commentary.\n\n- **timestamps**: Creates a timestamped transcript of the video dialogue in [hh:mm:ss] format.\n\n- **summary**: Generates a concise bullet-point summary of the video's main points.\n\n- **scene**: Provides a comprehensive visual description of the video scene including setting, objects, people, lighting, colors, and camera techniques.\n\n- **clips**: Identifies shareable video segments with timestamps, transcripts, and explanations of their social media appeal.\n\n\n",
+        "height": 600,
+        "width": 300
+      },
+      "id": "57deacd1-ec28-4850-b856-306ae2dbc006",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -640,
+        1400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Set Workflow Config Variables",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "a9e6ffcb-1938-4a29-b63a-1ce9c354e6d3",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -300,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={{ $('Config').item.json.google_api_key }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": $json.meta_prompt\n        },\n        { \n          \"file_data\": { \n            \"file_uri\": $('Config').item.json.youtube_url\n          } \n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.2,\n    \"topP\": 0.8,\n    \"topK\": 40,\n    \"maxOutputTokens\": 2048,\n  },\n  \"model\": \"gemini-1.5-flash\"\n}) }}\n",
+        "options": {}
+      },
+      "id": "e7c136a9-8d9a-4b57-985e-9a1263709858",
+      "name": "Get Video Audience MetaData",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        1180
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "90bd636a-aa19-4f6b-80b3-bb236f29b317",
+              "name": "content",
+              "type": "string",
+              "value": "=<default>\n<prompt>\nCreate a practical summary of this {{ $json.text.content_purpose }} about {{ $json.text.key_topics[0] }} for busy professionals in a {{ $json.text.video_tone }} tone seeking actionable takeaways. Use a structured format with primary and secondary bullets. Highlight specific tools, methodologies, and resources mentioned, including direct quotes when they provide valuable context.  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</default>\n\n<transcribe>\n<prompt>\nAct as a professional transcriptionist and transcribe this {{ $json.text.video_type }} video verbatim. Include only spoken dialogue, maintaining speech patterns and verbal tics. Omit background sounds, music, or descriptions.  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</transcribe>\n\n<timestamps>\n<prompt>\nCreate a professional timestamped transcript of this {{ $json.text.video_type }} video for {{ $json.text.primary_audience }}. Format each entry exactly as [hh:mm:ss] Dialogue. Capture speaker changes and significant pauses. Prioritize accuracy over completeness.  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</timestamps>\n\n<summary>\n<prompt>\nAnalyze this {{ $json.text.video_type }} video and create a concise summary (approximately 150 words) for {{ $json.text.primary_audience }}. Use nested bullets to organize key points. Include direct quotes only when they significantly enhance understanding. Begin immediately with the content.  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</summary>\n\n<scene>\n<prompt>\nAs a professional video production analyst, describe this scene comprehensively for {{ $json.text.content_purpose }}. Focus on setting, objects, people, lighting, colors, and camera techniques that contribute most to the scene's impact. Be specific with visual details that would matter to {{ $json.text.primary_audience }}.  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</scene>\n\n<clips>\n<prompt>\nIdentify 3-5 high-engagement segments from this video specifically for {{ $json.text.best_social_platforms }} users interested in {{ $json.text.key_topics }}. For each clip, provide exact timestamps [hh:mm:ss-hh:mm:ss], verbatim transcript, and a compelling rationale focused on virality potential (shares, comments, saves).  Provide only the response and avoid any preamble text or further explanations.\n</prompt>\n<model>\ngemini-1.5-flash\n</model>\n</clips>\n\n\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6210d8dc-d6ba-4480-bb2f-731cd1852851",
+      "name": "Compose Prompts",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -200,
+        1620
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1a2e48b-0190-4f13-bf3f-8e74cbc8ab65",
+              "name": "text",
+              "type": "object",
+              "value": "={{ $json.candidates[0].content.parts[0].text.replaceAll('```json', '').replaceAll('```', '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "70cf5e09-ccaa-4d7a-ac0f-5bf9ec5ee3d1",
+      "name": "Extract MetaData Object",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        820,
+        1180
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the XML content from the input\nconst xmlContent = $input.first().json.content;\n\n// Get the tag name from the Config node\nconst tagName = $node[\"Config\"].json.prompt_type;\n\n// Create regex patterns for both prompt and model within the main tag\nconst promptRegex = new RegExp(`<${tagName}>[\\\\s\\\\S]*?<prompt>([\\\\s\\\\S]*?)</prompt>[\\\\s\\\\S]*?</${tagName}>`, \"i\");\nconst modelRegex = new RegExp(`<${tagName}>[\\\\s\\\\S]*?<model>([\\\\s\\\\S]*?)</model>[\\\\s\\\\S]*?</${tagName}>`, \"i\");\n\n// Use the match method to apply the regex patterns\nconst promptMatch = xmlContent.match(promptRegex);\nconst modelMatch = xmlContent.match(modelRegex);\n\n// Create the output item with proper structure\nlet outputItem = {\n  json: {\n    prompt: null,\n    model: null\n  }\n};\n\n// Extract prompt content if found\nif (promptMatch) {\n  outputItem.json.prompt = promptMatch[1].trim();\n}\n\n// Extract model content if found\nif (modelMatch) {\n  outputItem.json.model = modelMatch[1].trim();\n}\n\n// Return the properly structured item\nreturn [outputItem];\n"
+      },
+      "id": "afbf25e8-93ea-4a9a-b262-517c7fc96fd7",
+      "name": "Get Prompt by Prompt Type",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        140,
+        1620
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3524064-c7fb-4f63-8421-f18f35cf5556",
+              "name": "meta_prompt",
+              "type": "string",
+              "value": "=Analyze this YouTube video and extract key metadata to help optimize AI-generated content about it. Return ONLY a valid JSON object with the following fields:\n\n{\n  \"video_type\": \"The video format/genre (tutorial, vlog, review, interview, etc.)\",\n  \"primary_audience\": \"The main target audience based on content, language, and presentation style\",\n  \"secondary_audiences\": [\"List of 2-3 other potential audience segments\"],\n  \"content_purpose\": \"The main goal of the video (educate, entertain, persuade, etc.)\",\n  \"key_topics\": [\"3-5 main topics or themes covered\"],\n  \"best_social_platforms\": [\"2-3 platforms where clips would perform best\"],\n  \"video_tone\": \"Overall tone (professional, casual, humorous, serious, etc.)\",\n  \"engagement_drivers\": [\"2-3 aspects that would drive viewer engagement\"]\n}\n\nFocus on objective analysis of visual and verbal cues. Do not include subjective quality assessments.\n\nReturn your response as a valid JSON object without any markdown formatting, code blocks, or explanatory text.  Always remove all ```json and ``` from final response.  Avoid all preamble or further explanation.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51cf3880-6bf0-4d70-afbe-0351d3da0115",
+      "name": "Define Audience Meta Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        140,
+        1180
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## Analyze YouTube Video for Audience MetaData",
+        "height": 300,
+        "width": 300,
+        "color": 3
+      },
+      "id": "2d9c60ea-a1d6-4e2c-96d9-c86fd3b35afd",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Get YouTube Information by Prompt Type",
+        "height": 300,
+        "width": 300,
+        "color": 3
+      },
+      "id": "4eb9cffe-2289-4350-a2cf-b383a27f8606",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        1500
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Define Audience Meta Prompt",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "8e1f44a9-e28a-4133-a7d3-3771f198130c",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        40,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Extract MetaData Object",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "3392c2a8-71b7-44fd-b64b-2b7fc739c603",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Compose the Prompts with Audience MetaData",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "d690d9d6-d2c3-42d1-bc73-9e454ac4be40",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -300,
+        1500
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Get Prompt by Prompt Type",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "abc11a50-349f-471b-bb37-cbe1c85de5c7",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        40,
+        1500
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/{{ $json.model }}:generateContent?key={{$('Config').item.json.google_api_key }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [\n      { \"text\": {{ JSON.stringify($json.prompt) }} },\n      { \"file_data\": { \n          \"file_uri\": \"{{ $('Config').item.json.youtube_url }}\" \n        } \n      }\n    ]\n  }]\n}",
+        "options": {}
+      },
+      "id": "962ebf8c-ecd7-4770-b4f6-86e795e58d07",
+      "name": "Get YouTube Information by Prompt Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        1620
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## 👍Try Me!\nYouTube Video Id: wBuULAoJxok",
+        "height": 300,
+        "width": 300,
+        "color": 4
+      },
+      "id": "92ac24e2-d5eb-40ac-a814-ec58395de5b4",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -640,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $('Start Workflow').item.json['YouTube Video Id'] }} - {{ $now }}\n\n{{ $('Extract MetaData Object').item.json.text.key_topics[0] }}\n{{ $('Extract MetaData Object').item.json.text.content_purpose }}\n{{ $('Extract MetaData Object').item.json.text.primary_audience }}\n\n{{ $json.candidates[0].content.parts[0].text }}\n\nVideo Details:\n{{ $('Merge').item.json.items.toJsonString() }}",
+        "name": "={{ $('Start Workflow').item.json['YouTube Video Id'] }} - {{ $now }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "id": "2cb9d5da-eeb8-427f-8be3-4e619c4ebee5",
+      "name": "Save to Google Drive as Text File",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        820,
+        1960
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.EMAIL_ADDRESS_JOE }}",
+        "subject": "={{ $('Start Workflow').item.json['YouTube Video Id'] }} - {{ $('Extract MetaData Object').item.json.text.key_topics[0] }}",
+        "message": "=<p>{{ $('Merge').item.json.items[0].snippet.title }}</p>\n<p>{{ $('Merge').item.json.items[0].id }}</p>\n\n<img src=\"{{ $('Merge').item.json.items[0].snippet.thumbnails.medium.url }}\">\n\n{{ $json.data }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "291e20e3-36d2-43d0-96fc-90995fc08806",
+      "name": "Send to Gmail as HTML",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1160,
+        1960
+      ],
+      "webhookId": "ccf34c87-14a3-4103-96fb-595cf9fa0636",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.candidates[0].content.parts[0].text }}",
+        "options": {}
+      },
+      "id": "29df80c5-133e-4df9-a453-42ea4e20ff48",
+      "name": "Convert Markdown to HTML",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        820,
+        1620
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "=<img src=\"{{ $('Merge').item.json.items[0].snippet.thumbnails.medium.url }}\">\n\n{{ $json.data }}\n"
+      },
+      "id": "6ca518f9-dfde-4ebc-8e89-d4dbb84c7d92",
+      "name": "Provide YouTube Information to User as HTML",
+      "type": "n8n-nodes-base.form",
+      "position": [
+        1160,
+        1620
+      ],
+      "webhookId": "49b5f9c9-e4c2-4cc4-b01c-c27b1cdba918",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Google Generative Language API",
+        "height": 100,
+        "width": 300,
+        "color": 5
+      },
+      "id": "2844dfaa-10e2-4fa4-bd9b-6d25d3b9d356",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        960
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Google Generative Language API",
+        "height": 100,
+        "width": 300,
+        "color": 5
+      },
+      "id": "850ca406-3aa9-41d3-bc08-54c11cb8cfa7",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        1400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Convert Markdown to HTML",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "d4af15df-11a8-4918-951e-8fc2b930369a",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1500
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Save YouTube Information to Google Drive",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "5c6c5b25-6484-43f1-b9b7-ac20703dae96",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1840
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Email YouTube Information",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "54854062-0e98-4ad5-b604-e39824fe3026",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1060,
+        1840
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Provide YouTube Information in Completion Form",
+        "height": 300,
+        "width": 300,
+        "color": 4
+      },
+      "id": "b3c76ceb-eb91-4209-aa80-77744ea1936b",
+      "name": "Sticky Note14",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1060,
+        1500
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# 🎥 Analyze YouTube Video for Summaries, Transcripts & Content + Google Gemini",
+        "height": 1660,
+        "width": 2140,
+        "color": 7
+      },
+      "id": "53002c81-98fd-4fc5-bf40-cfed31ab386a",
+      "name": "Sticky Note15",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -760,
+        560
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "formTitle": "Extract Information from YouTube Videos",
+        "formDescription": "This workflow allows you to extract various types of actionable information from YouTube videos that is audience specific using dynamically composed prompts.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Prompt Type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "default"
+                  },
+                  {
+                    "option": "transcribe"
+                  },
+                  {
+                    "option": "timestamps"
+                  },
+                  {
+                    "option": "summary"
+                  },
+                  {
+                    "option": "scene"
+                  },
+                  {
+                    "option": "clips"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "YouTube Video Id",
+              "placeholder": "wBuULAoJxok",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "86062f03-c512-400d-8c96-d9cb2cd09864",
+      "name": "Start Workflow",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -540,
+        1180
+      ],
+      "webhookId": "92148b0b-bbf7-4ce9-80a2-768207adee7b",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define the base URL for the YouTube Data API\nconst BASE_URL = 'https://www.googleapis.com/youtube/v3/videos';\n\n// Get the first input item\nconst item = $input.first();\n\n// Extract the videoId and google_api_key from the input JSON\nconst VIDEO_ID = item.json.video_id;\nconst GOOGLE_API_KEY = item.json.google_api_key; // Dynamically retrieve API key\n\nif (!VIDEO_ID) {\n  throw new Error('The video ID parameter is empty.');\n}\n\nif (!GOOGLE_API_KEY) {\n  throw new Error('The Google API Key is missing.');\n}\n\n// Construct the API URL with the video ID and dynamically retrieved API key\nconst youtubeUrl = `${BASE_URL}?part=snippet,contentDetails,status,statistics,player,topicDetails&id=${VIDEO_ID}&key=${GOOGLE_API_KEY}`;\n\n// Return the constructed URL\nreturn [\n  {\n    json: {\n      youtubeUrl: youtubeUrl,\n    },\n  },\n];\n"
+      },
+      "id": "7dcd6f45-0783-4827-bd34-578a85b20973",
+      "name": "Create YouTube API URL",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        140,
+        740
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.youtubeUrl }}",
+        "options": {}
+      },
+      "id": "fb5bdcd5-cc11-49d2-afee-74c5f042bc70",
+      "name": "Get YouTube Video Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        740
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Get YouTube Video Details",
+        "height": 300,
+        "width": 300,
+        "color": 3
+      },
+      "id": "6e64f1ea-f367-4719-b559-c9dd6844123d",
+      "name": "Sticky Note16",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        620
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "33b2c118-5fe4-4aec-9e93-8597bcea7dd3",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1140,
+        1180
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "## Create YouTube API URL",
+        "height": 300,
+        "width": 300,
+        "color": 7
+      },
+      "id": "44403db0-d774-41f2-98f2-582eba9aaef2",
+      "name": "Sticky Note17",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        40,
+        620
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Youtube Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube Transcript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Compose Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Create YouTube API URL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Define Audience Meta Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose Prompts": {
+      "main": [
+        [
+          {
+            "node": "Get Prompt by Prompt Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create YouTube API URL": {
+      "main": [
+        [
+          {
+            "node": "Get YouTube Video Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract MetaData Object": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Convert Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Send to Gmail as HTML",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Provide YouTube Information to User as HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prompt by Prompt Type": {
+      "main": [
+        [
+          {
+            "node": "Get YouTube Information by Prompt Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YouTube Video Details": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Audience Meta Prompt": {
+      "main": [
+        [
+          {
+            "node": "Get Video Audience MetaData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video Audience MetaData": {
+      "main": [
+        [
+          {
+            "node": "Extract MetaData Object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YouTube Information by Prompt Type": {
+      "main": [
+        [
+          {
+            "node": "Convert Markdown to HTML",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Google Drive as Text File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e1b65629-068d-48a1-9713-819efb3a2182",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "bSNmBMRIqI64rbUV",
+  "tags": []
+}
