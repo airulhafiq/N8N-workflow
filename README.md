@@ -62,5 +62,3 @@ Make sure to configure the following credentials or API services within n8n:
 
 Created by [Airul Hafiq](https://github.com/airulhafiq).
 Feel free to open an issue or discussion if you have questions.
-
-```
