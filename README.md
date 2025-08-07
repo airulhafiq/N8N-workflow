@@ -1,7 +1,6 @@
 # 📊 n8n Workflow
 
 This repository contains an automated workflow built using [n8n](https://n8n.io), a fair-code licensed workflow automation tool. The workflow is designed to [brief description of what your workflow does – e.g., "fetch Twitter data, run sentiment analysis, and store results in Google Sheets"].
----
 
 ## ⚙️ How to Use This Workflow
 
